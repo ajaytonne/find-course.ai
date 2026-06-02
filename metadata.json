@@ -1,0 +1,6 @@
+{
+  "name": "FindCourse.ai",
+  "description": "AI-powered university matching platform by SEAES to help students and job seekers find their perfect global academic fit in under 60 seconds, featuring interactive assistance and analytics.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
