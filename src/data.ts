@@ -21,6 +21,33 @@ export const CUSTOM_COUNTRIES = [
   { name: "Aruba", flag: "🇦🇼", code: "AW" }
 ];
 
+export const getCountryFlag = (countryName: string): string => {
+  if (!countryName) return "🗺️";
+  const known = CUSTOM_COUNTRIES.find(c => c.name.toLowerCase() === countryName.trim().toLowerCase());
+  if (known) return known.flag;
+  
+  const lower = countryName.toLowerCase();
+  if (lower.includes("united kingdom") || lower.includes("uk")) return "🇬🇧";
+  if (lower.includes("united states") || lower.includes("usa") || lower.includes("us")) return "🇺🇸";
+  if (lower.includes("canada")) return "🇨🇦";
+  if (lower.includes("australia")) return "🇦🇺";
+  if (lower.includes("switzerland")) return "🇨🇭";
+  if (lower.includes("singapore")) return "🇸🇬";
+  if (lower.includes("new zealand")) return "🇳🇿";
+  if (lower.includes("ireland")) return "🇮🇪";
+  if (lower.includes("india")) return "🇮🇳";
+  if (lower.includes("germany")) return "🇩🇪";
+  if (lower.includes("france")) return "🇫🇷";
+  if (lower.includes("georgia")) return "🇬🇪";
+  if (lower.includes("russia")) return "🇷🇺";
+  if (lower.includes("uzbekistan")) return "🇺🇿";
+  if (lower.includes("tajikistan")) return "🇹🇯";
+  if (lower.includes("kazakhstan")) return "🇰🇿";
+  if (lower.includes("kyrgyzstan")) return "🇰🇬";
+  if (lower.includes("albania")) return "🇦🇱";
+  return "🏳️";
+};
+
 export const KB_UNIVERSITIES: University[] = [
   {
     name: "University of Oxford",
@@ -31,7 +58,35 @@ export const KB_UNIVERSITIES: University[] = [
     tags: ["Research", "Historic"],
     characteristic: "Research, Historic",
     successStory: "Sarah Johnson: Studied MSc Computer Science at Oxford (From USA to UK, Class of 2024).",
-    description: "One of the oldest and most prestigious research universities in the world, renowned for historic academia."
+    description: "One of the oldest and most prestigious research universities in the world, renowned for historic academia.",
+    image: "https://images.unsplash.com/photo-1507842217343-583bb7270b66?auto=format&fit=crop&q=80&w=800",
+    hotspots: [
+      {
+        name: "Bodleian Library",
+        description: "Established in 1602, the iconic study room with massive vaulted ceilings and 13 million books.",
+        image: "https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&q=80&w=600",
+        vibe: "🤫 Quiet Elite Study"
+      },
+      {
+        name: "Christ Church Meadow",
+        description: "Lush green space bordered by the river Cherwell, perfect for contemplative evening walks.",
+        image: "https://images.unsplash.com/photo-1519751138087-5bf79df62d5b?auto=format&fit=crop&q=80&w=600",
+        vibe: "🌳 Riverside Oasis"
+      },
+      {
+        name: "Clarendon Science Lab",
+        description: "Leading-edge labs researching advanced physics, subatomic particles, and supercomputing.",
+        image: "https://images.unsplash.com/photo-1507668077129-56e32842fceb?auto=format&fit=crop&q=80&w=600",
+        vibe: "🔬 Historic Tech"
+      }
+    ],
+    admissionDeadline: "January 15, 2027 (standard wave)",
+    admissionRequirements: "IELTS 7.5+ or TOEFL 110+, target GPA 3.7+ (First-Class degree or equivalent)",
+    cutoffScore: "IELTS 7.5 or equivalent",
+    highestPlacementPackage: "£160,000 (~$204,000 USD)",
+    averagePlacementPackage: "£85,000 (~$108,000 USD)",
+    majorRecruiters: ["Oxford Sciences", "DeepMind", "Barclays", "McKinsey", "Goldman Sachs"],
+    keyHiringSectors: ["AI Research", "Investment Banking", "Quantitative Trading", "Consulting"]
   },
   {
     name: "Imperial College London",
@@ -42,7 +97,35 @@ export const KB_UNIVERSITIES: University[] = [
     tags: ["STEM", "Innovation"],
     characteristic: "STEM, Innovation",
     successStory: "Chen Wei: Studied MEng AI at Imperial College London (From China to UK, Class of 2023).",
-    description: "A world-class science, engineering, and business specialist located in the heart of London."
+    description: "A world-class science, engineering, and business specialist located in the heart of London.",
+    image: "https://images.unsplash.com/photo-1532094349884-543bc11b234d?auto=format&fit=crop&q=80&w=800",
+    hotspots: [
+      {
+        name: "The Queen's Tower",
+        description: "Imperial's iconic central landmark tower standing proud in the heart of the London campus.",
+        image: "https://images.unsplash.com/photo-1513635269975-59663e0ca1ad?auto=format&fit=crop&q=80&w=600",
+        vibe: "🏰 Central Landmark"
+      },
+      {
+        name: "Robotics & AI Center",
+        description: "Creative workshop where neural-network drone prototypes and AI agents are designed.",
+        image: "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?auto=format&fit=crop&q=80&w=600",
+        vibe: "🤖 Brain-Power Coding"
+      },
+      {
+        name: "Exhibition Road Courtyard",
+        description: "Sleek pedestrian avenue linking colleges with science museums and active student bistros.",
+        image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=600",
+        vibe: "☕ South Kensington Vibe"
+      }
+    ],
+    admissionDeadline: "Late January (for STEM wave)",
+    admissionRequirements: "IELTS 7.0+ or TOEFL 100+, strong GRE scores recommended for Finance routes",
+    cutoffScore: "IELTS 7.0+ or equivalent",
+    highestPlacementPackage: "£140,000 (~$178,000 USD)",
+    averagePlacementPackage: "£72,000 (~$92,000 USD)",
+    majorRecruiters: ["AstraZeneca", "Barclays", "DeepMind", "Goldman Sachs"],
+    keyHiringSectors: ["BioTech", "Quantitative Finance", "AI Engineering", "Software Systems"]
   },
   {
     name: "University of Toronto",
@@ -53,7 +136,35 @@ export const KB_UNIVERSITIES: University[] = [
     tags: ["Diverse", "Research"],
     characteristic: "Diverse, Research",
     successStory: "Maria Silva: Studied MBA at University of Toronto (From Brazil to Canada, Class of 2024).",
-    description: "A leading global research powerhouse nestled in Canada's most diverse cultural tech hub."
+    description: "A leading global research powerhouse nestled in Canada's most diverse cultural tech hub.",
+    image: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&q=80&w=800",
+    hotspots: [
+      {
+        name: "King's College Circle",
+        description: "Huge grassy meadow in the center of campus offering spectacular views of the old Gothic spires.",
+        image: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=600",
+        vibe: "🎓 Classical Campus Vibe"
+      },
+      {
+        name: "Robarts Library Structure",
+        description: "Historic Brutalist giant containing Canada's largest scientific database and quiet thesis alcoves.",
+        image: "https://images.unsplash.com/photo-1521587760476-6c12a4b040da?auto=format&fit=crop&q=80&w=600",
+        vibe: "📚 Hardcore Study Mode"
+      },
+      {
+        name: "MaRS Discovery Incubator",
+        description: "Urban innovation lab accelerating medical, tech, and automated intelligence research startups.",
+        image: "https://images.unsplash.com/photo-1581092921461-eab62e97a780?auto=format&fit=crop&q=80&w=600",
+        vibe: "🚀 Startup Hub"
+      }
+    ],
+    admissionDeadline: "Mid-January to March 1 (varies by program)",
+    admissionRequirements: "IELTS 7.0+ (minimum 6.5 in each section) or TOEFL 100+",
+    cutoffScore: "IELTS 7.0 or TOEFL 100",
+    highestPlacementPackage: "CAD 165,000 (~$120,000 USD)",
+    averagePlacementPackage: "CAD 84,000 (~$61,000 USD)",
+    majorRecruiters: ["Shopify", "RBC", "Deloitte", "Amazon Canada", "TD Bank Group"],
+    keyHiringSectors: ["Technology Startups", "Retail Commerce", "Supply Chain Logistics", "SaaS Programs"]
   },
   {
     name: "University of Melbourne",
@@ -64,7 +175,35 @@ export const KB_UNIVERSITIES: University[] = [
     tags: ["Innovation", "Global"],
     characteristic: "Innovation, Global",
     successStory: "Emma Thompson: Studied MS Data Science at Stanford (From Australia to USA, Class of 2024) [Origin: Australian].",
-    description: "Australia's number one university, integrating progressive global design and top employment results."
+    description: "Australia's number one university, integrating progressive global design and top employment results.",
+    image: "https://images.unsplash.com/photo-1525920980442-e27417ec06b4?auto=format&fit=crop&q=80&w=800",
+    hotspots: [
+      {
+        name: "The Sandstone Quadrangle",
+        description: "Fabulous gothic courtyard surrounded by deep-shaded cloisters and sprawling green grass.",
+        image: "https://images.unsplash.com/photo-1562774053-701939374585?auto=format&fit=crop&q=80&w=600",
+        vibe: "🏰 Heritage Court"
+      },
+      {
+        name: "School of Design Atrium",
+        description: "Stunning eco-atrium focusing on industrial architecture, spatial layout, and high-tech modeling.",
+        image: "https://images.unsplash.com/photo-1512403754473-27855f33d4fc?auto=format&fit=crop&q=80&w=600",
+        vibe: "📐 Avant-Garde Design"
+      },
+      {
+        name: "University Southbank Hub",
+        description: "Vibrant creative core hosting year-round indie concert series, food drives, and live exhibits.",
+        image: "https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&q=80&w=600",
+        vibe: "🎨 Social & Arts"
+      }
+    ],
+    admissionDeadline: "October 31 for Semester 1 (February), April 30 for Semester 2 (July)",
+    admissionRequirements: "GPA 3.0+ (on 4.0 scale), IELTS 6.5+ (no band less than 6.0) or TOEFL 79+",
+    cutoffScore: "IELTS 6.5 or equivalent",
+    highestPlacementPackage: "AUD 155,000 (~$102,000 USD)",
+    averagePlacementPackage: "AUD 78,000 (~$51,000 USD)",
+    majorRecruiters: ["Atlassian", "Macquarie Group", "BHP", "PwC Australia", "ANZ Bank"],
+    keyHiringSectors: ["Software Engineering", "Mining Infrastructure", "Business Analytics", "Financial Consulting"]
   },
   {
     name: "ETH Zurich",
@@ -75,7 +214,35 @@ export const KB_UNIVERSITIES: University[] = [
     tags: ["Engineering", "Research"],
     characteristic: "Engineering, Research",
     successStory: "Rajesh Kumar: Studied PhD Mechanical Engineering at ETH Zurich (From India to Switzerland, Class of 2023).",
-    description: "An exceptional, low-tuition, high-standard European tech hub focusing on research and core engineering."
+    description: "An exceptional, low-tuition, high-standard European tech hub focusing on research and core engineering.",
+    image: "https://images.unsplash.com/photo-1447069387593-a5de0862481e?auto=format&fit=crop&q=80&w=800",
+    hotspots: [
+      {
+        name: "Main Polyterrasse",
+        description: "Grand stone terrace looking over the historic old town roofs of Zurich—breath-taking study break.",
+        image: "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&q=80&w=600",
+        vibe: "🏔️ Swiss Horizon"
+      },
+      {
+        name: "Einstein's Study Lounge",
+        description: "Dedicated study workspace celebrating Albert Einstein, the university's legendary Nobel alumnus.",
+        image: "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&q=80&w=600",
+        vibe: "💡 Physics Legacy"
+      },
+      {
+        name: "Hönggerberg Science City",
+        description: "Latter-day science city focusing on molecular engineering, zero-emission structures, and biology.",
+        image: "https://images.unsplash.com/photo-1501854140801-50d01698950b?auto=format&fit=crop&q=80&w=600",
+        vibe: "🌲 Mountain Eco-STEM"
+      }
+    ],
+    admissionDeadline: "November 1 to December 15 (for first/intercontinental round)",
+    admissionRequirements: "Extremely high academic honors in Bachelor's degree (rigorous engineering/math checklist), IELTS 7.0+ or TOEFL 100+",
+    cutoffScore: "IELTS 7.0 or equivalent",
+    highestPlacementPackage: "CHF 175,000 (~$192,000 USD)",
+    averagePlacementPackage: "CHF 98,000 (~$107,000 USD)",
+    majorRecruiters: ["Google Zurich", "ABB", "Swiss Re", "Credit Suisse / UBS", "Hoffmann-La Roche"],
+    keyHiringSectors: ["Robotics Systems", "Molecular Engineering", "Zero-Emission Tech", "Quantum Supercomputing"]
   },
   {
     name: "National University of Singapore (NUS)",
@@ -86,7 +253,35 @@ export const KB_UNIVERSITIES: University[] = [
     tags: ["Asia Tech", "Featured Hub"],
     characteristic: "Featured Asia Tech Hub",
     successStory: "Perfect fit for global business and deep technological disruption in Southeast Asia.",
-    description: "Asia’s premier global university, leading computational advancements and entrepreneurship."
+    description: "Asia’s premier global university, leading computational advancements and entrepreneurship.",
+    image: "https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&q=80&w=800",
+    hotspots: [
+      {
+        name: "UTown Green Center",
+        description: "Masterpiece tropical quadrangle linking residential halls, study rooms, and organic food hubs.",
+        image: "https://images.unsplash.com/photo-1535982330050-f1c2fb79ff78?auto=format&fit=crop&q=80&w=600",
+        vibe: "🌴 Biophilic UTown"
+      },
+      {
+        name: "Supercomputing AI Labs",
+        description: "The peak of high-tech machine learning computing research clusters and quantum chips in Asia.",
+        image: "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&q=80&w=600",
+        vibe: "💻 Quantum Supercomputer"
+      },
+      {
+        name: "Tropical Biosphere Canopy",
+        description: "Magnificent greenhouse research zones exploring agricultural drone harvesting and urban crops.",
+        image: "https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&q=80&w=600",
+        vibe: "🌱 Green AI Research"
+      }
+    ],
+    admissionDeadline: "December 15 to February 15 (standard intake cycle)",
+    admissionRequirements: "GPA 3.8+ (on 4.0 scale) or top 10% class rank, IELTS 7.0+ or TOEFL 100+",
+    cutoffScore: "IELTS 7.0 or equivalent",
+    highestPlacementPackage: "SGD 180,000 (~$133,000 USD)",
+    averagePlacementPackage: "SGD 88,000 (~$65,000 USD)",
+    majorRecruiters: ["Shopee", "Grab", "Google Asia", "DBS Bank", "McKinsey Singapore"],
+    keyHiringSectors: ["FinTech", "Automated Security Systems", "Cybersecurity", "E-Commerce", "E-Logistics"]
   }
 ];
 

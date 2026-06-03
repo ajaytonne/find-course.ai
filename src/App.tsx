@@ -1,10 +1,13 @@
 import React, { useState } from "react";
 import { MatchingState, University } from "./types";
-import { CUSTOM_COUNTRIES, KB_UNIVERSITIES, INTU_QUESTIONS } from "./data";
+import { CUSTOM_COUNTRIES, KB_UNIVERSITIES, INTU_QUESTIONS, getCountryFlag } from "./data";
 import AIChatBot from "./components/AIChatBot";
+import TextSelectionAIListener from "./components/TextSelectionAIListener";
 import DashboardView from "./components/DashboardView";
 import CounsellorConnect from "./components/CounsellorConnect";
 import RegistrationPage from "./components/RegistrationPage";
+import UniversityMatchCard from "./components/UniversityMatchCard";
+import UniversityDirectory from "./components/UniversityDirectory";
 import { 
   Home, 
   GraduationCap, 
@@ -27,7 +30,8 @@ import {
 } from "lucide-react";
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<"match" | "dashboard" | "counsel">("match");
+  const [activeTab, setActiveTab] = useState<"match" | "dashboard" | "counsel" | "explore">("match");
+  const [prefilledProgram, setPrefilledProgram] = useState("");
   const [searchCountry, setSearchCountry] = useState("");
   const [chatOpen, setChatOpen] = useState(false);
   const [signInOpen, setSignInOpen] = useState(false);
@@ -276,6 +280,15 @@ export default function App() {
         {/* Navigation Items */}
         <nav className="flex items-center gap-4 text-xs font-semibold text-gray-600">
           <button 
+            onClick={() => { setActiveTab("explore") }} 
+            className={`cursor-pointer hover:text-red-500 transition-colors flex items-center gap-1 ${activeTab === "explore" ? "text-red-500 font-extrabold" : ""}`}
+            id="nav-explore-link"
+          >
+            <Search className="w-3.5 h-3.5 text-red-500" />
+            <span>Search Universities</span>
+          </button>
+
+          <button 
             onClick={() => { setActiveTab("dashboard") }} 
             className={`cursor-pointer hover:text-red-500 transition-colors ${activeTab === "dashboard" ? "text-red-500 font-extrabold" : ""}`}
             id="nav-dashboard-link"
@@ -329,7 +342,16 @@ export default function App() {
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-8 space-y-6">
         
         {activeTab === "dashboard" && <DashboardView />}
-        {activeTab === "counsel" && <CounsellorConnect />}
+        {activeTab === "counsel" && <CounsellorConnect prefilledProgram={prefilledProgram} />}
+        {activeTab === "explore" && (
+          <UniversityDirectory 
+            onSelectCountryCode={(code) => {}}
+            onInitiateCounselingMatch={(uniName) => {
+              setPrefilledProgram(uniName);
+              setActiveTab("counsel");
+            }}
+          />
+        )}
 
         {activeTab === "match" && (
           <div className="space-y-6" id="wizard-tab-container">
@@ -577,42 +599,70 @@ export default function App() {
                   </div>
                 ) : (
                   // STEPS 2 to 10: Clicking directly advances to the next page / next screen, Unemployed-Friendly Wizard
-                  <div className="max-w-2xl mx-auto bg-white border border-gray-100 rounded-2xl p-6 md:p-8 shadow-sm space-y-6" id="wizard-generic-step-view">
+                  <div className="max-w-4xl mx-auto bg-white border border-gray-100 rounded-2xl p-6 md:p-8 shadow-sm space-y-6" id="wizard-generic-step-view">
                     
                     {/* Header meta */}
-                    <div className="space-y-1.5 text-center">
-                      <h2 className="font-display font-bold text-lg md:text-xl text-gray-800">
+                    <div className="space-y-1.5 text-center max-w-2xl mx-auto">
+                      <h2 className="font-display font-black text-lg md:text-xl text-gray-900 uppercase tracking-wide">
                         {INTU_QUESTIONS[wizardState.currentStep - 1].title}
                       </h2>
-                      <p className="text-gray-400 text-xs">
+                      <p className="text-gray-400 text-xs font-semibold">
                         {INTU_QUESTIONS[wizardState.currentStep - 1].subtitle}
                       </p>
                     </div>
 
-                    {/* Select options - Large accessible clickable buttons */}
-                    <div className="grid grid-cols-1 gap-3">
-                      {INTU_QUESTIONS[wizardState.currentStep - 1].options.map((opt) => (
-                        <button
-                          key={opt.id}
-                          onClick={() => handleSelectOption(INTU_QUESTIONS[wizardState.currentStep - 1].fieldName, opt.value)}
-                          className="w-full p-4 border border-gray-100 text-left rounded-xl hover:border-purple-500/80 hover:bg-purple-50/20 active:bg-purple-50 transition-all flex items-start gap-3 cursor-pointer group"
-                        >
-                          <div className="w-5 h-5 rounded-full border-2 border-gray-200 group-hover:border-purple-600 shrink-0 flex items-center justify-center text-[10px] text-purple-600 font-extrabold font-mono mt-0.5 mt-min-0.5">
-                            <span className="w-2.5 h-2.5 rounded-full bg-purple-600 scale-0 group-hover:scale-100 transition-transform" />
-                          </div>
-                          <div>
-                            <h4 className="text-xs font-bold text-gray-800 font-sans group-hover:text-purple-700 transition-colors">
-                              {opt.label}
-                            </h4>
-                            {opt.description && (
-                              <p className="text-[11px] text-gray-400 mt-0.5 leading-normal">
-                                {opt.description}
-                              </p>
-                            )}
-                          </div>
-                        </button>
-                      ))}
-                    </div>
+                    {/* Select options - Dynamic Box cards designed for all wizard steps */}
+                    {(() => {
+                      const currentQuestion = INTU_QUESTIONS[wizardState.currentStep - 1];
+                      const optionsCount = currentQuestion.options.length;
+                      
+                      let gridClass = "grid-cols-1 gap-4";
+                      if (optionsCount === 2) {
+                        gridClass = "grid-cols-1 sm:grid-cols-2 max-w-2xl mx-auto gap-4";
+                      } else if (optionsCount === 3) {
+                        gridClass = "grid-cols-1 sm:grid-cols-3 gap-4";
+                      } else if (optionsCount === 4) {
+                        gridClass = "grid-cols-1 sm:grid-cols-2 gap-4";
+                      } else if (optionsCount >= 5) {
+                        gridClass = "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4";
+                      }
+
+                      return (
+                        <div className={`grid ${gridClass}`} id={`universal-box-grid-step-${currentQuestion.id}`}>
+                          {currentQuestion.options.map((opt) => {
+                            const firstCharMatches = opt.label.match(/^\p{Emoji_Presentation}/u) || opt.label.match(/^\p{Emoji}/u);
+                            const icon = firstCharMatches ? firstCharMatches[0] : "🎓";
+                            const labelText = opt.label.replace(icon, "").trim();
+
+                            return (
+                              <button
+                                key={opt.id}
+                                onClick={() => handleSelectOption(currentQuestion.fieldName, opt.value)}
+                                className="w-full p-5 border border-gray-150 rounded-xl text-center hover:border-red-500 hover:bg-red-50/5 hover:scale-[1.01] active:scale-[0.99] transition-all flex flex-col items-center justify-between gap-4 cursor-pointer group h-full shadow-xs bg-white"
+                              >
+                                <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center text-2xl group-hover:bg-red-100 transition-colors shrink-0">
+                                  {icon}
+                                </div>
+                                <div className="flex-1 flex flex-col justify-start">
+                                  <h4 className="text-xs font-black text-gray-950 group-hover:text-red-500 transition-colors uppercase tracking-wider block">
+                                    {labelText}
+                                  </h4>
+                                  {opt.description && (
+                                    <p className="text-[10px] text-gray-400 mt-2 leading-relaxed font-semibold">
+                                      {opt.description}
+                                    </p>
+                                  )}
+                                </div>
+                                
+                                <div className="w-full text-center py-2 bg-gray-50 text-[10px] font-mono font-bold text-gray-400 rounded-lg group-hover:bg-red-500 group-hover:text-white transition-colors">
+                                  Select Option
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
 
                     {/* Navigation control */}
                     <div className="flex justify-between items-center border-t border-gray-150/60 pt-4 text-xs font-semibold text-gray-500">
@@ -653,7 +703,7 @@ export default function App() {
                       We Found Your Academic Fit at 100% Zero Cost!
                     </h2>
                     <p className="text-red-100/90 text-xs sm:text-sm">
-                      We parsed your matching profile for <strong>{wizardState.country}</strong> studying <strong>{wizardState.interest}</strong>. Our custom matchmaking accuracy calculated at 95%. Enjoy fully integrated free guidance!
+                      We parsed your matching profile for <strong>{getCountryFlag(wizardState.country)} {wizardState.country}</strong> studying <strong>{wizardState.interest}</strong>. Our custom matchmaking accuracy calculated at 95%. Enjoy fully integrated free guidance!
                     </p>
                     <div className="pt-2 flex flex-wrap gap-4 text-xs font-mono text-purple-200">
                       <div>📁 Budget Category: {wizardState.budget} Tuition</div>
@@ -670,9 +720,10 @@ export default function App() {
                   
                   {/* Left Side: Matched University list */}
                   <div className="lg:col-span-8 space-y-4">
+
                     <div className="flex items-center justify-between">
                       <h3 className="font-display font-bold text-sm text-gray-800">
-                        Top Grounded Matches for {wizardState.country}
+                        Top Grounded Matches for {getCountryFlag(wizardState.country)} {wizardState.country}
                       </h3>
                       <button
                         onClick={resetMatching}
@@ -682,64 +733,17 @@ export default function App() {
                       </button>
                     </div>
 
-                    <div className="space-y-4">
+                    <div className="space-y-6">
                       {wizardState.matches.map((uni, idx) => (
-                        <div key={idx} className="bg-white border border-gray-100 rounded-2xl p-5 shadow-xs hover:shadow-md transition-shadow relative overflow-hidden">
-                          
-                          {/* Rank Pill */}
-                          <div className="absolute top-4 right-4 bg-purple-50 text-purple-700 border border-purple-100 rounded-lg py-1 px-2.5 font-mono text-[10px] font-extrabold">
-                            QS Global Rank #{uni.ranking}
-                          </div>
-
-                          <div className="space-y-2 mt-2">
-                            <span className="text-[10px] font-extrabold uppercase font-mono tracking-wider text-red-500">
-                              Official Supported Partner
-                            </span>
-                            <h4 className="font-display font-black text-gray-800 text-sm md:text-base leading-tight">
-                              {uni.name}
-                            </h4>
-                            <p className="text-[11px] text-gray-500 leading-normal">
-                              {uni.description}
-                            </p>
-                          </div>
-
-                          <div className="grid grid-cols-3 gap-3 border-t border-gray-100 mt-4 pt-3.5 text-center">
-                            <div>
-                              <div className="text-[9px] text-gray-400 font-bold uppercase">Tuition Scale</div>
-                              <div className="text-xs font-extrabold text-gray-800 font-mono mt-0.5">{uni.fees}</div>
-                            </div>
-                            <div>
-                              <div className="text-[9px] text-gray-400 font-bold uppercase">Acceptance rate</div>
-                              <div className="text-xs font-extrabold text-amber-600 font-mono mt-0.5">{uni.acceptanceRate}</div>
-                            </div>
-                            <div>
-                              <div className="text-[9px] text-gray-400 font-bold uppercase">Global Vibe</div>
-                              <div className="text-xs font-extrabold text-[#7e22ce] mt-0.5">{uni.characteristic}</div>
-                            </div>
-                          </div>
-
-                          {/* Alumnus success story */}
-                          <div className="bg-amber-50/50 p-3 rounded-xl border border-amber-100/50 text-[10px] text-amber-900 flex gap-2 items-start mt-4 leading-relaxed">
-                            <span className="text-lg">🎓</span>
-                            <div>
-                              <strong>Verified Student Career Transition:</strong> {uni.successStory}
-                            </div>
-                          </div>
-
-                          {/* Direct Central tracker link */}
-                          <div className="pt-3 flex justify-end gap-2.5 text-[11px] font-bold">
-                            <button
-                              onClick={() => {
-                                alert(`Applying to ${uni.name} for ${wizardState.interest || "Computer Science"} has been initialized! Our team of counselors will fetch your documents 100% Free with No hidden fees.`);
-                                setActiveTab("dashboard");
-                              }}
-                              className="px-4 py-2 bg-gray-900 hover:bg-black text-white rounded-lg transition-colors cursor-pointer"
-                            >
-                              Track & Match Immediately
-                            </button>
-                          </div>
-
-                        </div>
+                        <UniversityMatchCard
+                          key={idx}
+                          uni={uni}
+                          interest={wizardState.interest}
+                          onTrackImmediately={() => {
+                            alert(`Applying to ${uni.name} for ${wizardState.interest || "Computer Science"} has been initialized! Our team of counselors will fetch your documents 100% Free with No hidden fees.`);
+                            setActiveTab("dashboard");
+                          }}
+                        />
                       ))}
                     </div>
 
@@ -856,7 +860,7 @@ export default function App() {
 
         {chatOpen && (
           <div className="absolute bottom-14 right-0 w-80 sm:w-96 h-[500px] shadow-2xl rounded-2xl overflow-hidden bg-white border border-gray-200 flex flex-col">
-            <AIChatBot onClose={() => setChatOpen(false)} />
+            <AIChatBot onClose={() => setChatOpen(false)} wizardState={wizardState} />
           </div>
         )}
       </div>
@@ -923,6 +927,14 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {/* Global Text Selection Observer for Immediate AI Explanations & Matches */}
+      <TextSelectionAIListener
+        onTriggerCatalogMatch={(major) => {
+          setPrefilledProgram(major);
+          setActiveTab("counsel");
+        }}
+      />
 
     </div>
   );

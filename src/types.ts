@@ -4,6 +4,14 @@ export interface Message {
   content: string;
   timestamp: Date;
   isVoiceInput?: boolean;
+  animate?: boolean;
+}
+
+export interface CampusHotspot {
+  name: string;
+  description: string;
+  image: string;
+  vibe: string;
 }
 
 export interface University {
@@ -16,6 +24,15 @@ export interface University {
   characteristic: string;
   successStory: string;
   description: string;
+  image?: string;
+  hotspots?: CampusHotspot[];
+  admissionDeadline?: string;
+  admissionRequirements?: string;
+  cutoffScore?: string;
+  highestPlacementPackage?: string;
+  averagePlacementPackage?: string;
+  majorRecruiters?: string[];
+  keyHiringSectors?: string[];
 }
 
 export interface MatchingState {

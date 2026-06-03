@@ -2,6 +2,72 @@ import React, { useState } from "react";
 import { GraduationCap, Phone, Mail, MapPin, Shield, CheckCircle, ArrowRight, HelpCircle } from "lucide-react";
 import { Lead } from "../types";
 
+const INDIAN_CITIES = [
+  "Kolhapur, Maharashtra, India",
+  "Mumbai, Maharashtra, India",
+  "Pune, Maharashtra, India",
+  "Nagpur, Maharashtra, India",
+  "Thane, Maharashtra, India",
+  "Nashik, Maharashtra, India",
+  "Aurangabad, Maharashtra, India",
+  "Solapur, Maharashtra, India",
+  "Navi Mumbai, Maharashtra, India",
+  "Amravati, Maharashtra, India",
+  "Delhi, NCR, India",
+  "Noida, Uttar Pradesh, India",
+  "Gurgaon, Haryana, India",
+  "Faridabad, Haryana, India",
+  "Bengaluru, Karnataka, India",
+  "Mysore, Karnataka, India",
+  "Hubli-Dharwad, Karnataka, India",
+  "Hyderabad, Telangana, India",
+  "Warangal, Telangana, India",
+  "Chennai, Tamil Nadu, India",
+  "Coimbatore, Tamil Nadu, India",
+  "Madurai, Tamil Nadu, India",
+  "Tiruchirappalli, Tamil Nadu, India",
+  "Salem, Tamil Nadu, India",
+  "Kolkata, West Bengal, India",
+  "Howrah, West Bengal, India",
+  "Ahmedabad, Gujarat, India",
+  "Surat, Gujarat, India",
+  "Vadodara, Gujarat, India",
+  "Rajkot, Gujarat, India",
+  "Jaipur, Rajasthan, India",
+  "Jodhpur, Rajasthan, India",
+  "Kota, Rajasthan, India",
+  "Lucknow, Uttar Pradesh, India",
+  "Kanpur, Uttar Pradesh, India",
+  "Ghaziabad, Uttar Pradesh, India",
+  "Agra, Uttar Pradesh, India",
+  "Meerut, Uttar Pradesh, India",
+  "Varanasi, Uttar Pradesh, India",
+  "Aligarh, Uttar Pradesh, India",
+  "Bareilly, Uttar Pradesh, India",
+  "Moradabad, Uttar Pradesh, India",
+  "Patna, Bihar, India",
+  "Indore, Madhya Pradesh, India",
+  "Bhopal, Madhya Pradesh, India",
+  "Gwalior, Madhya Pradesh, India",
+  "Jabalpur, Madhya Pradesh, India",
+  "Visakhapatnam, Andhra Pradesh, India",
+  "Vijayawada, Andhra Pradesh, India",
+  "Guntur, Andhra Pradesh, India",
+  "Dhanbad, Jharkhand, India",
+  "Ranchi, Jharkhand, India",
+  "Amritsar, Punjab, India",
+  "Ludhiana, Punjab, India",
+  "Jalandhar, Punjab, India",
+  "Srinagar, Jammu & Kashmir, India",
+  "Raipur, Chhattisgarh, India",
+  "Guwahati, Assam, India",
+  "Chandigarh, India",
+  "Bhubaneswar, Odisha, India",
+  "Kochi, Kerala, India",
+  "Thiruvananthapuram, Kerala, India",
+  "Dehradun, Uttarakhand, India"
+];
+
 interface RegistrationPageProps {
   onRegisterSuccess: (user: { name: string; email: string; phone: string; address: string; status: string }) => void;
 }
@@ -14,6 +80,122 @@ export default function RegistrationPage({ onRegisterSuccess }: RegistrationPage
   const [status, setStatus] = useState("Unemployed / Career Transition");
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [citySuggestions, setCitySuggestions] = useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+  // OTP State Management
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpVerified, setOtpVerified] = useState(false);
+  const [otpCode, setOtpCode] = useState("");
+  const [sendingOtp, setSendingOtp] = useState(false);
+  const [verifyingOtp, setVerifyingOtp] = useState(false);
+  const [timer, setTimer] = useState(0);
+  const [sandboxOtp, setSandboxOtp] = useState<string | null>(null);
+
+  // Send verification OTP handler
+  const handleSendOTP = async () => {
+    if (!name.trim()) {
+      setErrorMsg("Please enter your Full Name first before requesting an OTP.");
+      return;
+    }
+    if (!email.trim() || !email.includes("@")) {
+      setErrorMsg("Please enter a valid Email Address first.");
+      return;
+    }
+    setErrorMsg("");
+    setSendingOtp(true);
+    setSandboxOtp(null);
+
+    try {
+      const response = await fetch("/api/otp/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim(), name: name.trim() })
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to dispatch verification code.");
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        setOtpSent(true);
+        setTimer(300); // 5 minutes standard timer
+        if (data.sandbox && data.otp) {
+          setSandboxOtp(data.otp);
+        }
+      } else {
+        throw new Error(data.error || "Sending failed");
+      }
+    } catch (err: any) {
+      console.error(err);
+      setErrorMsg(err.message || "Trouble sending OTP email. Please try again.");
+    } finally {
+      setSendingOtp(false);
+    }
+  };
+
+  // Timer countdown hook
+  React.useEffect(() => {
+    let interval: any;
+    if (timer > 0 && otpSent && !otpVerified) {
+      interval = setInterval(() => {
+        setTimer((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [timer, otpSent, otpVerified]);
+
+  // Format seconds to MM:SS
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
+  };
+
+  // Verify OTP callback
+  const handleVerifyOTP = async () => {
+    const code = otpCode.trim();
+    if (!code || code.length !== 6) {
+      setErrorMsg("Please enter the complete 6-digit verification code.");
+      return;
+    }
+    setErrorMsg("");
+    setVerifyingOtp(true);
+
+    try {
+      const response = await fetch("/api/otp/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim(), otp: code })
+      });
+
+      const data = await response.json();
+      if (response.ok && data.success) {
+        setOtpVerified(true);
+        setSandboxOtp(null);
+      } else {
+        throw new Error(data.error || "Incorrect code or code has expired.");
+      }
+    } catch (err: any) {
+      console.error(err);
+      setErrorMsg(err.message || "OTP verification failed. Please double check.");
+    } finally {
+      setVerifyingOtp(false);
+    }
+  };
+
+  // Reset OTP if user modifies email
+  const handleEmailChange = (newEmail: string) => {
+    setEmail(newEmail);
+    if (otpSent || otpVerified) {
+      setOtpSent(false);
+      setOtpVerified(false);
+      setOtpCode("");
+      setSandboxOtp(null);
+      setTimer(0);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,6 +203,19 @@ export default function RegistrationPage({ onRegisterSuccess }: RegistrationPage
       setErrorMsg("Please fill in all details so our agents can reach you.");
       return;
     }
+
+    if (!otpVerified) {
+      setErrorMsg("Please complete Email Verification via OTP before completing enrollment.");
+      return;
+    }
+
+    const cleanPhone = phone.replace(/\D/g, "");
+    if (cleanPhone.length !== 10) {
+      setErrorMsg("Please enter a valid 10-digit Indian phone number (after +91).");
+      return;
+    }
+
+    const fullPhone = `+91 ${cleanPhone}`;
 
     setErrorMsg("");
     setSubmitting(true);
@@ -32,7 +227,7 @@ export default function RegistrationPage({ onRegisterSuccess }: RegistrationPage
         body: JSON.stringify({
           name,
           email,
-          phone,
+          phone: fullPhone,
           address,
           employmentStatus: status
         })
@@ -45,14 +240,14 @@ export default function RegistrationPage({ onRegisterSuccess }: RegistrationPage
       const data = await response.json();
       if (data.success) {
         // Log user in
-        onRegisterSuccess({ name, email, phone, address, status });
+        onRegisterSuccess({ name, email, phone: fullPhone, address, status });
       } else {
         throw new Error("Server returned false status.");
       }
     } catch (err: any) {
       console.error(err);
       // Fallback to local success if server temporarily offline during build so user never blocks
-      onRegisterSuccess({ name, email, phone, address, status });
+      onRegisterSuccess({ name, email, phone: fullPhone, address, status });
     } finally {
       setSubmitting(false);
     }
@@ -159,48 +354,123 @@ export default function RegistrationPage({ onRegisterSuccess }: RegistrationPage
               </div>
             </div>
 
-            {/* Input Email */}
-            <div className="space-y-1.5">
-              <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider">Email Address</label>
-              <div className="relative">
-                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
-                  <Mail className="w-4 h-4 text-gray-400" />
-                </span>
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="ajay@gmail.com"
-                  className="w-full pl-9 py-3 text-xs font-semibold border border-gray-250 rounded-xl focus:outline-none focus:ring-1 focus:ring-red-500 bg-gray-50/20"
-                />
+            {/* Input Email with OTP dispatch panel */}
+            <div className="space-y-1.5 focus-within:text-indigo-600 transition-colors">
+              <div className="flex justify-between items-center">
+                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider font-sans">Email Address</label>
+                {otpVerified ? (
+                  <span className="text-[10px] text-green-700 font-extrabold uppercase tracking-wide flex items-center gap-1 bg-green-50 px-2 py-0.5 rounded-sm">
+                    ✓ Verified Mail
+                  </span>
+                ) : (
+                  <span className="text-[9px] text-purple-700 font-bold uppercase tracking-wider">
+                    OTP Verification Required
+                  </span>
+                )}
               </div>
+              <div className="relative flex gap-2">
+                <div className="relative flex-1">
+                  <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-405">
+                    <Mail className="w-4 h-4 text-gray-400" />
+                  </span>
+                  <input
+                    type="email"
+                    required
+                    disabled={otpVerified || sendingOtp}
+                    value={email}
+                    onChange={(e) => handleEmailChange(e.target.value)}
+                    placeholder="ajay@gmail.com"
+                    className="w-full pl-9 py-3 text-xs font-semibold border border-gray-250 rounded-xl focus:outline-none focus:ring-1 focus:ring-red-500 bg-gray-50/20 disabled:bg-gray-100 disabled:text-gray-400"
+                  />
+                </div>
+                {!otpVerified && (
+                  <button
+                    type="button"
+                    disabled={sendingOtp || !email.trim() || !name.trim()}
+                    onClick={handleSendOTP}
+                    className="px-4 py-2 bg-gradient-to-r from-red-550 to-purple-550 hover:from-red-600 hover:to-purple-700 text-white font-extrabold text-[10px] uppercase tracking-wider rounded-xl transition-all shadow-3xs cursor-pointer hover:shadow-2xs active:scale-98 disabled:opacity-50 disabled:cursor-not-allowed shrink-0 flex items-center justify-center bg-red-500"
+                  >
+                    {sendingOtp ? "Sending..." : otpSent ? "Resend OTP" : "Send OTP"}
+                  </button>
+                )}
+              </div>
+
+              {/* Enter OTP Section */}
+              {otpSent && !otpVerified && (
+                <div className="mt-2.5 p-3.5 bg-purple-50/40 border border-purple-100 rounded-xl space-y-2.5 animate-fade-in relative z-20">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[9px] font-black uppercase text-purple-800 tracking-wider">Enter 6-Digit Code</span>
+                    {timer > 0 ? (
+                      <span className="text-[9px] text-gray-500 font-bold">Expires in {formatTime(timer)}</span>
+                    ) : (
+                      <span className="text-[9px] text-red-650 font-bold">Code expired • click resend</span>
+                    )}
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      maxLength={6}
+                      placeholder="e.g. 123456"
+                      value={otpCode}
+                      onChange={(e) => {
+                        const cleaned = e.target.value.replace(/\D/g, "");
+                        setOtpCode(cleaned.slice(0, 6));
+                      }}
+                      className="w-full px-3.5 py-2.5 text-center text-xs font-black tracking-[4px] border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-purple-500 bg-white"
+                    />
+                    <button
+                      type="button"
+                      disabled={verifyingOtp || otpCode.trim().length !== 6}
+                      onClick={handleVerifyOTP}
+                      className="px-5 py-2.5 bg-purple-700 hover:bg-purple-800 text-white font-extrabold text-[10px] uppercase tracking-widest rounded-lg transition-colors cursor-pointer shrink-0"
+                    >
+                      {verifyingOtp ? "Checking..." : "Verify Code"}
+                    </button>
+                  </div>
+
+                  {sandboxOtp && (
+                    <div className="p-2.5 bg-amber-50 border border-amber-200/60 rounded-md text-[9px] text-amber-800 leading-normal font-semibold flex items-start gap-1.5 animate-pulse">
+                      <span className="text-xs">👋</span>
+                      <div>
+                        <strong>Demo Sandbox Mode Activated:</strong> SMTP has not been configured in your .env secrets. Please enter <strong className="text-amber-900 bg-amber-100 rounded px-1.5 py-0.5 select-all font-mono font-black text-[10px] tracking-wider">{sandboxOtp}</strong> to instantly complete verification!
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Input Phone */}
             <div className="space-y-1.5">
               <div className="flex justify-between items-center">
-                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider">Phone / WhatsApp Number</label>
-                <span className="text-[9px] text-green-600 font-bold uppercase">Callback Enabled</span>
+                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider font-sans">Phone / WhatsApp Number</label>
+                <span className="text-[9px] text-red-600 font-bold uppercase tracking-wider bg-red-50 px-1.5 py-0.5 rounded-sm">🇮🇳 Indian Number Only</span>
               </div>
-              <div className="relative">
-                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
-                  <Phone className="w-4 h-4 text-gray-400" />
-                </span>
+              <div className="relative flex border border-gray-250 rounded-xl overflow-hidden focus-within:ring-1 focus-within:ring-red-500 bg-gray-50/10">
+                <div className="flex items-center gap-1.5 px-3 bg-gray-50 border-r border-gray-250 text-xs font-bold text-gray-500 shrink-0 select-none">
+                  <span className="text-sm">🇮🇳</span>
+                  <span>+91</span>
+                </div>
                 <input
                   type="tel"
+                  maxLength={10}
                   required
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="e.g. +91 98765 43210"
-                  className="w-full pl-9 py-3 text-xs font-semibold border border-gray-250 rounded-xl focus:outline-none focus:ring-1 focus:ring-red-500 bg-gray-50/20"
+                  onChange={(e) => {
+                    const cleaned = e.target.value.replace(/\D/g, "");
+                    setPhone(cleaned.slice(0, 10));
+                  }}
+                  placeholder="e.g. 98765 43210"
+                  className="w-full px-3.5 py-3 text-xs font-semibold focus:outline-none bg-transparent"
                 />
               </div>
+              <p className="text-[9px] text-gray-400 font-semibold leading-relaxed">Enter your 10-digit mobile number. Our support team will reach out via WhatsApp.</p>
             </div>
 
             {/* Input Address */}
-            <div className="space-y-1.5">
-              <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider">Permanent Address / Location</label>
+            <div className="space-y-1.5 relative">
+              <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider font-sans">Permanent Address / Location</label>
               <div className="relative">
                 <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
                   <MapPin className="w-4 h-4 text-gray-400" />
@@ -209,11 +479,59 @@ export default function RegistrationPage({ onRegisterSuccess }: RegistrationPage
                   type="text"
                   required
                   value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  placeholder="e.g. Hyderabad, Telangana, India"
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setAddress(val);
+                    if (val.trim().length >= 2) {
+                      const lowerVal = val.toLowerCase();
+                      const matched = INDIAN_CITIES.filter(city => 
+                        city.toLowerCase().includes(lowerVal)
+                      ).slice(0, 5);
+                      setCitySuggestions(matched);
+                      setShowSuggestions(true);
+                    } else {
+                      setCitySuggestions([]);
+                      setShowSuggestions(false);
+                    }
+                  }}
+                  onFocus={() => {
+                    if (address.trim().length >= 2) {
+                      setShowSuggestions(true);
+                    }
+                  }}
+                  onBlur={() => {
+                    setTimeout(() => {
+                      setShowSuggestions(false);
+                    }, 250);
+                  }}
+                  placeholder="Type to search (e.g. Kolhapur, Pune, Mumbai)"
                   className="w-full pl-9 py-3 text-xs font-semibold border border-gray-250 rounded-xl focus:outline-none focus:ring-1 focus:ring-red-500 bg-gray-50/20"
                 />
               </div>
+
+              {/* Suggestions Dropdown with beautiful shadow & spacing */}
+              {showSuggestions && citySuggestions.length > 0 && (
+                <div className="absolute z-30 left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-56 overflow-y-auto divide-y divide-gray-100 animate-fade-in">
+                  {citySuggestions.map((city) => (
+                    <button
+                      key={city}
+                      type="button"
+                      onMouseDown={(e) => {
+                        // Prevent instant inputs from losing focus before registering click
+                        e.preventDefault(); 
+                      }}
+                      onClick={() => {
+                        setAddress(city);
+                        setShowSuggestions(false);
+                      }}
+                      className="w-full text-left px-4 py-2.5 text-xs font-semibold text-gray-700 hover:bg-red-50 hover:text-red-700 transition-colors flex items-center gap-2 cursor-pointer"
+                    >
+                      <span className="text-xs">📍</span>
+                      <span>{city}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Selection Status */}
